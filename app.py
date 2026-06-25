@@ -1,79 +1,106 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[1]:
+import os
 import streamlit as st
 from google import genai
-client = genai.Client(api_key="Your_api_key")
+from dotenv import load_dotenv
+load_dotenv("api_key.env")
 
+# Gemini Client
+client = genai.Client(api_key= os.getenv("GEMINI_API_KEY"))
+
+# Page Configuration
 st.set_page_config(
-    page_title="SupplyChain AI Assistant",
-    page_icon="📦",
+    page_title="GuideAI",
+    page_icon="logo.png",
     layout="wide"
 )
+
+# Session Memory
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
 # Sidebar
 with st.sidebar:
+    st.image("logo.png", width=120)
+    st.title("GuideAI")
+    st.write("Choose an expert mode")
 
-    st.title("📦 SupplyChain AI")
+    assistant_mode = st.selectbox(
+        "Choose Expert Mode",
+        [
+            "Supply Chain Consultant",
+            "Data Analyst",
+            "Mechanical Engineer"
+        ]
+    )
 
-    st.write("AI-powered Supply Chain Assistant")
+    st.caption(f"Current Mode: {assistant_mode}")
 
     st.divider()
 
     st.write("### Capabilities")
-    st.write("• Inventory Management")
-    st.write("• Demand Forecasting")
-    st.write("• Logistics")
-    st.write("• Procurement")
-    st.write("• Warehouse Operations")
+
+    if assistant_mode == "Supply Chain Consultant":
+        st.write("• Inventory Management")
+        st.write("• Demand Forecasting")
+        st.write("• Logistics")
+        st.write("• Procurement")
+        st.write("• Warehouse Operations")
+
+    elif assistant_mode == "Data Analyst":
+        st.write("• SQL")
+        st.write("• Excel")
+        st.write("• Power BI")
+        st.write("• Python")
+        st.write("• Statistics")
+
+    else:
+        st.write("• Thermodynamics")
+        st.write("• Fluid Mechanics")
+        st.write("• SOM")
+        st.write("• Manufacturing")
+        st.write("• CAD / CFD")
 
     st.divider()
 
     if st.button("🗑️ Clear Chat"):
         st.session_state.messages = []
         st.rerun()
-# Main Title
-st.title("SupplyChain AI Assistant")
-# Session Memory
-if "messages" not in st.session_state:
-    st.session_state.messages = []
+
+# Main Page
+st.title("GuideAI")
 
 # Welcome Message
 if len(st.session_state.messages) == 0:
 
-    st.info("""
-👋 Welcome to SupplyChain AI Assistant.
+    st.info(
+        f"""
+Welcome to {assistant_mode} Mode.
 
-Try asking:
-
-• How can I reduce inventory costs?
-
-• What is EOQ?
-
-• Explain demand forecasting.
-
-• How can warehouses improve efficiency?
-
-• What causes stockouts?
+Ask anything related to this domain.
 """
-)
+    )
+
 # Display Previous Messages
 for message in st.session_state.messages:
 
     with st.chat_message(message["role"]):
+        if message["role"] == "assistant":
+            st.caption(f"Expert: {message.get("Mode", "AI")}")
         st.markdown(message["content"])
+
 # Chat Input
 user_input = st.chat_input(
-    "Ask a supply chain question"
+    "Ask your question..."
 )
+
 # Process User Input
 if user_input and user_input.strip():
 
-    # Display User Message
-
+    # Show User Message
     with st.chat_message("user"):
         st.markdown(user_input)
 
+    # Store User Message
     st.session_state.messages.append(
         {
             "role": "user",
@@ -81,75 +108,110 @@ if user_input and user_input.strip():
         }
     )
 
-    #Role Prompt
+    # Conversation History
+    conversation_history = ""
 
-    prompt = f"""
-You are SupplyChain AI, an expert Supply Chain and Operations Consultant.
+    for msg in st.session_state.messages:
 
-Your expertise includes:
+        conversation_history += (
+            f"{msg['role']}: {msg['content']}\n"
+        )
 
+    # Role Prompts
+    if assistant_mode == "Supply Chain Consultant":
+
+        role_prompt = """
+You are an expert Supply Chain and Operations Consultant.
+
+Expertise:
 - Inventory Management
 - Demand Forecasting
-- Logistics
 - Procurement
+- Logistics
 - Warehouse Management
-- Supply Chain Analytics
-- Production Planning
-- Supplier Management
 
-Guidelines:
+Give practical business-focused answers.
+Use headings and bullet points.
+"""
 
-1. Give practical and professional answers.
-2. Use headings and bullet points.
-3. Explain technical terms simply.
-4. Give real business examples whenever possible.
-5. Keep responses concise but useful.
-6. If a question is outside supply chain, answer politely but briefly.
-7. Never claim to have real-time company data.
+    elif assistant_mode == "Data Analyst":
 
-User Question:
+        role_prompt = """
+You are an expert Data Analyst.
+
+Expertise:
+- SQL
+- Excel
+- Power BI
+- Python
+- Statistics
+- Data Visualization
+
+Explain concepts clearly with examples.
+Use headings and bullet points.
+"""
+
+    else:
+
+        role_prompt = """
+You are an expert Mechanical Engineer.
+
+Expertise:
+- Thermodynamics
+- Fluid Mechanics
+- SOM
+- TOM
+- Manufacturing
+- CAD
+- CFD
+
+Explain engineering concepts simply and practically.
+Use headings and bullet points.
+"""
+
+    # Final Prompt
+    prompt = f"""
+{role_prompt}
+
+Conversation History:
+
+{conversation_history}
+
+Current User Question:
 
 {user_input}
 """
 
+    # Gemini Response
     try:
-
-        response = client.models.generate_content(
+        with st.spinner("Thinking..."):
+            response = client.models.generate_content(
             model="gemini-2.5-flash",
             contents=prompt
         )
-
         assistant_reply = response.text
 
-    except Exception:
+    except Exception as e:
 
-        assistant_reply = """
-⚠️ Sorry, the AI service is temporarily unavailable.
+        assistant_reply = f"""
+ AI service temporarily unavailable.
 
-Possible reasons:
+Reason:
+{str(e)}
 
-• API quota exceeded
-
-• Gemini server busy
-
-• Network issue
-
-Please try again in a few moments.
+Please try again.
 """
 
-    # Display Assistant Message
-
+    # Show Assistant Message
     with st.chat_message("assistant"):
+        st.caption(f"Expert: {assistant_mode}")
         st.markdown(assistant_reply)
 
+    # Save Assistant Message
     st.session_state.messages.append(
         {
             "role": "assistant",
-            "content": assistant_reply
+            "content": assistant_reply,
+            "mode": assistant_mode
         }
     )
-# In[ ]:
-
-
-
-

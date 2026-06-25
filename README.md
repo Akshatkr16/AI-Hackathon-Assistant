@@ -1,31 +1,23 @@
-# AI Hackathon Assistant
+GuideAI
+An AI-powered chatbot built with Streamlit and Google Gemini API that provides domain-specific assistance across multiple engineering and business fields.
 
-## Goal
-Learning Generative AI, APIs, Prompt Engineering and Building AI Applications.
+Features
+Multi-domain AI assistant
+Supply Chain Consultant mode
+Data Analyst mode
+Mechanical Engineer mode
+Conversational memory
+Interactive chat interface
+Loading animation
+Error handling
+Responsive Streamlit UI
 
----
+Tech Stack
+Python
+Streamlit
+Google Gemini API
+Prompt Engineering
+Session State
+Markdown
 
-## Day 1
 
-### Topics Learned
-- Google AI Studio
-- Gemini API Key Generation
-- Gemini SDK Installation
-- API Authentication
-- First LLM API Call
-
-### Model Used
-- Gemini 2.5 Flash
-
-### Example Prompt
-
-```python
-response = client.models.generate_content(
-    model="gemini-2.5-flash",
-    contents="Give me 3 AI Hackathon Project Ideas"
-)
-```
-
-### Learning
-
-Today I learned how Large Language Models can be accessed through APIs and how prompts influence generated responses.
